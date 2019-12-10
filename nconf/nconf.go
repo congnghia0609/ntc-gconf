@@ -18,7 +18,7 @@ import (
 var config *viper.Viper
 var env string
 
-func Init() {
+func Init(wdir string) {
 	//// init Configuration
 	environment := flag.String("e", "development", "run project with mode [-e development | test | production]")
 	flag.Usage = func() {
@@ -27,19 +27,18 @@ func Init() {
 	}
 	flag.Parse()
 	log.Printf("============== NConf environment: %s", *environment)
-	InitEnv(*environment)
+	InitEnv(wdir, *environment)
 }
 
 // Init is an exported method that takes the environment starts the viper (external lib) and
 // returns the configuration struct.
-func InitEnv(environment string) {
+func InitEnv(wdir string, environment string) {
 	log.Printf("============== NConfig Init Environment: %s ==============", environment)
 	var err error
 	v := viper.New()
 	v.SetConfigType("yaml")
 	v.SetConfigName(environment)
-	v.AddConfigPath("../conf/")
-	v.AddConfigPath("conf/")
+	v.AddConfigPath(filepath.Join(wdir, "conf"))
 	err = v.ReadInConfig()
 	if err != nil {
 		log.Fatal("error on parsing configuration file")
@@ -48,11 +47,8 @@ func InitEnv(environment string) {
 	env = environment
 }
 
-func RelativePath(basedir string, path *string) {
-	p := *path
-	if p != "" && p[0] != '/' {
-		*path = filepath.Join(basedir, p)
-	}
+func JoinPath(basedir string, path string) string {
+	return filepath.Join(basedir, path)
 }
 
 func GetConfig() *viper.Viper {
